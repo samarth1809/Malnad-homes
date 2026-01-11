@@ -3,6 +3,8 @@ import React from 'react';
 import { Button } from './Button';
 import { ArrowRight, Upload, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 
 interface HeroProps {
   onOpenDashboard: () => void;
@@ -10,6 +12,16 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onOpenDashboard }) => {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const { openAuthModal } = useUI();
+
+  const handleListProperty = () => {
+    if (isAuthenticated) {
+      onOpenDashboard();
+    } else {
+      openAuthModal();
+    }
+  };
 
   return (
     <section id="home" className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
@@ -46,7 +58,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDashboard }) => {
           <Button variant="primary" size="lg" onClick={() => document.getElementById('places')?.scrollIntoView({behavior: 'smooth'})} className="w-full sm:w-auto">
             {t('hero.ctaFind')}
           </Button>
-          <Button variant="outline" size="lg" className="group w-full sm:w-auto" onClick={onOpenDashboard}>
+          <Button variant="outline" size="lg" className="group w-full sm:w-auto" onClick={handleListProperty}>
             <Upload className="mr-2 h-5 w-5" />
             {t('hero.ctaList')}
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

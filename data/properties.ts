@@ -1,5 +1,5 @@
 
-import { Property } from '../types';
+import { Property, Review } from '../types';
 
 // Puttur Center approx: 12.7685, 75.2023
 
@@ -22,7 +22,13 @@ export const properties: Property[] = [
     description: "A peaceful heritage home converted into a co-living space for remote workers and postgraduate students. Surrounded by plantations, it offers a quiet environment for deep work and study. \n\nFeatures shared common areas and high-speed internet, fostering a small community of like-minded professionals.",
     amenities: ["High-Speed Wi-Fi", "Home Cooked Meals", "Quiet Study Zones", "Parking", "Power Backup", "Housekeeping"],
     specs: { guests: 8, bedrooms: 4, bathrooms: 3, size: "3,200 sq ft" },
-    coordinates: { lat: 12.7750, lng: 75.2150 }
+    coordinates: { lat: 12.7750, lng: 75.2150 },
+    owner: {
+      name: "Shivaprasad K.",
+      contact: "+91 94481 00001",
+      email: "shivaprasad@malnadhomes.in",
+      avatar: "https://ui-avatars.com/api/?name=Shivaprasad+K&background=064e3b&color=fff"
+    }
   },
   {
     id: "2",
@@ -42,7 +48,13 @@ export const properties: Property[] = [
     description: "Located in the bustling heart of Darbar, these serviced apartments are perfect for corporate employees. Quick access to Puttur's bus stand and major banks. \n\nEnjoy hassle-free living with cleaning services and modern furnishings included.",
     amenities: ["AC Rooms", "Fiber Internet", "Work Desk", "Room Service", "Laundry", "Elevator"],
     specs: { guests: 2, bedrooms: 1, bathrooms: 1, size: "650 sq ft" },
-    coordinates: { lat: 12.7690, lng: 75.2030 }
+    coordinates: { lat: 12.7690, lng: 75.2030 },
+    owner: {
+      name: "Ramesh Shetty",
+      contact: "+91 94812 00002",
+      email: "ramesh.shetty@darbar.com",
+      avatar: "https://ui-avatars.com/api/?name=Ramesh+Shetty&background=065f46&color=fff"
+    }
   },
   {
     id: "3",
@@ -62,7 +74,13 @@ export const properties: Property[] = [
     description: "Situated in the educational hub of Nehrunagar, this PG is walking distance from St. Philomena College and other institutions. \n\nDesigned specifically for students, offering a disciplined yet comfortable environment with healthy food options.",
     amenities: ["Study Desk", "Wi-Fi", "Washing Machine", "Mess Facility", "CCTV Security", "24/7 Water"],
     specs: { guests: 2, bedrooms: 1, bathrooms: 1, size: "400 sq ft" },
-    coordinates: { lat: 12.7620, lng: 75.2100 }
+    coordinates: { lat: 12.7620, lng: 75.2100 },
+    owner: {
+      name: "Venkatesh Rao",
+      contact: "+91 98800 12345",
+      email: "venky.rao@gmail.com",
+      avatar: "https://ui-avatars.com/api/?name=Venkatesh+Rao&background=10b981&color=fff"
+    }
   },
   {
     id: "4",
@@ -82,7 +100,13 @@ export const properties: Property[] = [
     description: "A spacious villa suitable for a group of colleagues or a family relocating to Puttur. \n\nFeatures large shared spaces, a kitchen for self-cooking, and a garden. Located in a safe residential neighborhood.",
     amenities: ["Private Garden", "Full Kitchen", "Parking (4 cars)", "Inverter Backup", "Pet Friendly"],
     specs: { guests: 10, bedrooms: 5, bathrooms: 5, size: "4,500 sq ft" },
-    coordinates: { lat: 12.7550, lng: 75.2200 }
+    coordinates: { lat: 12.7550, lng: 75.2200 },
+    owner: {
+      name: "Mrs. Leela Hegde",
+      contact: "+91 99001 55667",
+      email: "leela.hegde@outlook.com",
+      avatar: "https://ui-avatars.com/api/?name=Leela+Hegde&background=34d399&color=fff"
+    }
   },
   {
     id: "5",
@@ -102,7 +126,13 @@ export const properties: Property[] = [
     description: "Strategically located near the railway station. Ideal for daily commuters or employees working in the industrial area. \n\nBudget-friendly accommodation with clean basic amenities and transport connectivity.",
     amenities: ["Near Railway Station", "Filtered Water", "Single Beds", "Bike Parking", "Budget Friendly"],
     specs: { guests: 3, bedrooms: 1, bathrooms: 1, size: "550 sq ft" },
-    coordinates: { lat: 12.7800, lng: 75.1950 }
+    coordinates: { lat: 12.7800, lng: 75.1950 },
+    owner: {
+      name: "Kishore Rai",
+      contact: "+91 97412 88990",
+      email: "kishore.rai@kabaka.in",
+      avatar: "https://ui-avatars.com/api/?name=Kishore+Rai&background=022c22&color=fff"
+    }
   },
   {
     id: "6",
@@ -122,7 +152,13 @@ export const properties: Property[] = [
     description: "A modern 2BHK flat in Bolwar. Ideal for small families or two professionals sharing. \n\nClose to supermarkets and gyms. The building has security and dedicated parking.",
     amenities: ["Modular Kitchen", "Washing Machine", "Power Backup", "Gym Access", "Covered Parking"],
     specs: { guests: 4, bedrooms: 2, bathrooms: 2, size: "1,100 sq ft" },
-    coordinates: { lat: 12.7580, lng: 75.2050 }
+    coordinates: { lat: 12.7580, lng: 75.2050 },
+    owner: {
+      name: "Suresh Balnad",
+      contact: "+91 94482 11223",
+      email: "suresh@balnadgroup.com",
+      avatar: "https://ui-avatars.com/api/?name=Suresh+Balnad&background=064e3b&color=fff"
+    }
   },
   {
     id: "7",
@@ -142,7 +178,13 @@ export const properties: Property[] = [
     description: "A quiet cottage for those who prefer nature over city noise. Great for writers or students preparing for exams. \n\nAffordable rent with basic amenities. Own vehicle recommended.",
     amenities: ["Fruit Orchard", "Silence", "Water Heater", "Nature Trails", "Yoga Space"],
     specs: { guests: 4, bedrooms: 2, bathrooms: 2, size: "1,400 sq ft" },
-    coordinates: { lat: 12.7600, lng: 75.1800 }
+    coordinates: { lat: 12.7600, lng: 75.1800 },
+    owner: {
+      name: "Ananth Rao",
+      contact: "+91 88844 55566",
+      email: "ananth.bannur@yahoo.in",
+      avatar: "https://ui-avatars.com/api/?name=Ananth+Rao&background=065f46&color=fff"
+    }
   },
   {
     id: "8",
@@ -162,7 +204,13 @@ export const properties: Property[] = [
     description: "A secure women's hostel right on Main Road. Very close to colleges and bus stops. \n\nFeatures 24/7 security guard, CCTV, and hygienic mess food included in rent.",
     amenities: ["24/7 Security", "Mess Included", "Warden", "Study Hall", "Hot Water"],
     specs: { guests: 2, bedrooms: 1, bathrooms: 1, size: "500 sq ft" },
-    coordinates: { lat: 12.7710, lng: 75.2040 }
+    coordinates: { lat: 12.7710, lng: 75.2040 },
+    owner: {
+      name: "Poornima Devi",
+      contact: "+91 91102 33445",
+      email: "poornima.hostel@rediffmail.com",
+      avatar: "https://ui-avatars.com/api/?name=Poornima+Devi&background=10b981&color=fff"
+    }
   },
   {
     id: "9",
@@ -182,7 +230,13 @@ export const properties: Property[] = [
     description: "Affordable shared accommodation in Padnoor. \n\nGreat for students looking for a low-cost option with plenty of open space. Peaceful environment.",
     amenities: ["Field View", "Shared Kitchen", "Bicycle Parking", "Local Cuisine", "Open Deck"],
     specs: { guests: 6, bedrooms: 3, bathrooms: 3, size: "2,200 sq ft" },
-    coordinates: { lat: 12.7480, lng: 75.1980 }
+    coordinates: { lat: 12.7480, lng: 75.1980 },
+    owner: {
+      name: "Raghavendra Bhat",
+      contact: "+91 94821 77889",
+      email: "raghu.bhat@padnoor.com",
+      avatar: "https://ui-avatars.com/api/?name=Raghavendra+Bhat&background=34d399&color=fff"
+    }
   },
   {
     id: "10",
@@ -202,7 +256,13 @@ export const properties: Property[] = [
     description: "Compact studio apartment in Mundoor. \n\nIdeal for a single professional. Comes with a small kitchenette and attached bath. Private and secure.",
     amenities: ["Kitchenette", "Private Terrace", "Work Chair", "Pet Friendly", "Water Heater"],
     specs: { guests: 1, bedrooms: 1, bathrooms: 1, size: "400 sq ft" },
-    coordinates: { lat: 12.7850, lng: 75.2250 }
+    coordinates: { lat: 12.7850, lng: 75.2250 },
+    owner: {
+      name: "Sandeep Rai",
+      contact: "+91 99805 11224",
+      email: "sandeep.rai@mundoor.in",
+      avatar: "https://ui-avatars.com/api/?name=Sandeep+Rai&background=022c22&color=fff"
+    }
   },
   {
     id: "11",
@@ -222,7 +282,13 @@ export const properties: Property[] = [
     description: "Premium men's PG in Aryapu with gym and recreation room. \n\nAttracts young professionals and students. Clean rooms with daily housekeeping.",
     amenities: ["Gym", "Recreation Room", "High Speed Wifi", "Washing Machine", "Biometric Entry"],
     specs: { guests: 6, bedrooms: 3, bathrooms: 4, size: "3,500 sq ft" },
-    coordinates: { lat: 12.7650, lng: 75.2300 }
+    coordinates: { lat: 12.7650, lng: 75.2300 },
+    owner: {
+      name: "Girish Aryapu",
+      contact: "+91 94480 99887",
+      email: "girish@aryapu-stays.in",
+      avatar: "https://ui-avatars.com/api/?name=Girish+Aryapu&background=064e3b&color=fff"
+    }
   },
   {
     id: "12",
@@ -242,6 +308,51 @@ export const properties: Property[] = [
     description: "An independent house in Chikkamudnoor available for rent. \n\nQuiet neighborhood, perfect for a family. Close to schools and local market.",
     amenities: ["Car Parking", "Garden", "Semi-Furnished", "24/7 Water", "Family Friendly"],
     specs: { guests: 5, bedrooms: 2, bathrooms: 2, size: "1,200 sq ft" },
-    coordinates: { lat: 12.7720, lng: 75.1850 }
+    coordinates: { lat: 12.7720, lng: 75.1850 },
+    owner: {
+      name: "Mohammad Ishaq",
+      contact: "+91 97400 44556",
+      email: "ishaq.home@gmail.com",
+      avatar: "https://ui-avatars.com/api/?name=Mohammad+Ishaq&background=065f46&color=fff"
+    }
+  }
+];
+
+export const mockReviews: Review[] = [
+  {
+    id: "r1",
+    propertyId: "1",
+    userName: "Aditi Sharma",
+    userAvatar: "https://i.pravatar.cc/150?u=aditi",
+    rating: 5,
+    date: "2 months ago",
+    comment: "Absolutely loved the peace and quiet here. Perfect for finishing my thesis. The food is just like home!"
+  },
+  {
+    id: "r2",
+    propertyId: "1",
+    userName: "Rohan Das",
+    userAvatar: "https://i.pravatar.cc/150?u=rohan",
+    rating: 4,
+    date: "1 month ago",
+    comment: "Great internet speed. The shared kitchen is well-maintained. A bit far from the main road but worth it for the tranquility."
+  },
+  {
+    id: "r3",
+    propertyId: "3",
+    userName: "Sameer K.",
+    userAvatar: "https://i.pravatar.cc/150?u=sameer",
+    rating: 4,
+    date: "3 weeks ago",
+    comment: "Very close to St. Philomena. saves me a lot of travel time. The warden is friendly."
+  },
+  {
+    id: "r4",
+    propertyId: "2",
+    userName: "Priya Hegde",
+    userAvatar: "https://i.pravatar.cc/150?u=priya",
+    rating: 5,
+    date: "5 days ago",
+    comment: "Executive suites are top-notch. Cleaning service is very professional. Highly recommended for working pros."
   }
 ];

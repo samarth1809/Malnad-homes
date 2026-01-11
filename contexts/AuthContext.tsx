@@ -16,6 +16,18 @@ import {
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+interface UpdateProfileParams {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  contact?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  dob?: string;
+  address?: string;
+  avatar?: string;
+  photoFile?: File | null;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -24,7 +36,7 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string, photoFile?: File | null) => Promise<void>;
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: UpdateProfileParams) => Promise<void>;
   updatePassword: (oldPw: string, newPw: string) => Promise<void>;
 }
 
@@ -34,11 +46,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Map Firebase User to App User
+  // Load metadata from local storage for high-fidelity user details
+  const getUserMeta = (uid: string) => {
+    const meta = localStorage.getItem(`malnad_user_meta_${uid}`);
+    return meta ? JSON.parse(meta) : {};
+  };
+
+  const saveUserMeta = (uid: string, meta: any) => {
+    localStorage.setItem(`malnad_user_meta_${uid}`, JSON.stringify(meta));
+  };
+
+  // Map Firebase User to App User with extended metadata
   const mapUser = (fbUser: FirebaseUser): User => {
+    const meta = getUserMeta(fbUser.uid);
     return {
       id: fbUser.uid,
-      name: fbUser.displayName || 'User',
+      name: fbUser.displayName || meta.name || 'User',
+      firstName: meta.firstName || fbUser.displayName?.split(' ')[0] || '',
+      lastName: meta.lastName || fbUser.displayName?.split(' ').slice(1).join(' ') || '',
+      contact: meta.contact || '',
+      gender: meta.gender || undefined,
+      dob: meta.dob || '',
+      address: meta.address || '',
       email: fbUser.email || '',
       role: 'user', // Default role
       avatar: fbUser.photoURL || undefined,
@@ -52,8 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
-      // Only set user if email is verified
-      if (fbUser && fbUser.emailVerified) {
+      // Only set user if email is verified (or if it's a provider like Google)
+      if (fbUser && (fbUser.emailVerified || fbUser.providerData[0]?.providerId === 'google.com')) {
         setUser(mapUser(fbUser));
       } else {
         setUser(null);
@@ -68,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      if (!userCredential.user.emailVerified) {
+      if (!userCredential.user.emailVerified && userCredential.user.providerData[0]?.providerId === 'password') {
         // Resend verification email if not verified
         await sendEmailVerification(userCredential.user);
         await signOut(auth);
@@ -90,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      // State update is handled by onAuthStateChanged
     } catch (error: any) {
       console.error("Google Sign In Error:", error);
       if (error.code === 'auth/popup-closed-by-user') {
@@ -113,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           photoURL = await getDownloadURL(storageRef);
         } catch (storageError) {
           console.error("Failed to upload profile photo:", storageError);
-          // Fallback to a default avatar generator
           photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff`;
         }
       } else {
@@ -125,10 +152,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         photoURL: photoURL
       });
 
-      // Send Verification Email
-      await sendEmailVerification(userCredential.user);
+      // Initialize metadata
+      saveUserMeta(userCredential.user.uid, {
+        name,
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ').slice(1).join(' ')
+      });
 
-      // Sign out immediately so they can't access the app until verified
+      await sendEmailVerification(userCredential.user);
       await signOut(auth);
 
     } catch (error: any) {
@@ -150,22 +181,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfileData = async (data: Partial<User>) => {
+  const updateProfileData = async (data: UpdateProfileParams) => {
     if (!auth.currentUser) return;
     
+    let photoURL = data.avatar || auth.currentUser.photoURL || "";
+
+    if (data.photoFile) {
+      const storageRef = ref(storage, `avatars/${auth.currentUser.uid}/${Date.now()}_${data.photoFile.name}`);
+      await uploadBytes(storageRef, data.photoFile);
+      photoURL = await getDownloadURL(storageRef);
+    }
+
+    const newDisplayName = data.name || (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : auth.currentUser.displayName);
+
     await updateProfile(auth.currentUser, {
-      displayName: data.name || auth.currentUser.displayName,
-      photoURL: data.avatar || auth.currentUser.photoURL
+      displayName: newDisplayName,
+      photoURL: photoURL
     });
+
+    // Update metadata in local storage
+    const currentMeta = getUserMeta(auth.currentUser.uid);
+    const newMeta = {
+      ...currentMeta,
+      name: newDisplayName,
+      firstName: data.firstName || currentMeta.firstName,
+      lastName: data.lastName || currentMeta.lastName,
+      contact: data.contact || currentMeta.contact,
+      gender: data.gender || currentMeta.gender,
+      dob: data.dob || currentMeta.dob,
+      address: data.address || currentMeta.address,
+    };
+    saveUserMeta(auth.currentUser.uid, newMeta);
     
-    // Update local state
     if (user) {
-        setUser({ ...user, ...data });
+        setUser({ 
+          ...user, 
+          ...newMeta,
+          avatar: photoURL 
+        });
     }
   };
 
   const updateUserPassword = async (oldPw: string, newPw: string) => {
-     // Firebase requires re-authentication for password changes which is complex for this scope
      console.log("Password update requested - requires re-auth flow implementation");
   };
 

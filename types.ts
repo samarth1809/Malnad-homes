@@ -15,6 +15,16 @@ export interface Testimonial {
   rating: number;
 }
 
+export interface Review {
+  id: string;
+  propertyId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  date: string;
+  comment: string;
+}
+
 export interface BookingFormData {
   name: string;
   email: string;
@@ -36,7 +46,13 @@ export interface UserSettings {
 
 export interface User {
   id: string;
-  name: string;
+  name: string; // Full display name
+  firstName?: string;
+  lastName?: string;
+  contact?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  dob?: string;
+  address?: string;
   email: string;
   role: UserRole;
   avatar?: string;
@@ -56,6 +72,13 @@ export interface Booking {
 export type PropertyCategory = 'Villa' | 'Apartment' | 'PG' | 'Hostel' | 'Cottage';
 export type GuestType = 'Any' | 'Family' | 'Male' | 'Female';
 export type PropertyStatus = 'approved' | 'pending' | 'rejected';
+
+export interface PropertyOwner {
+  name: string;
+  contact: string;
+  email: string;
+  avatar?: string;
+}
 
 export interface Property {
   id: string;
@@ -81,4 +104,5 @@ export interface Property {
     lng: number;
   };
   status?: PropertyStatus; // Optional for backward compatibility with static data
+  owner?: PropertyOwner;
 }

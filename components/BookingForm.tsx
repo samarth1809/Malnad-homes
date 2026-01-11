@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { Calendar, Users, Mail, User } from 'lucide-react';
+import { Calendar, Users, Mail, User, CheckCircle } from 'lucide-react';
 import { BookingFormData } from '../types';
 
 export const BookingForm: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState<BookingFormData>({
     name: '',
     email: '',
@@ -15,8 +18,22 @@ export const BookingForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     // Simulate submission
-    alert('Thank you! Our concierge will contact you shortly to confirm your booking.');
+    setTimeout(() => {
+      setIsLoading(false);
+      setIsSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        checkIn: '',
+        checkOut: '',
+        guests: 1,
+        message: ''
+      });
+      setTimeout(() => setIsSuccess(false), 5000);
+    }, 1500);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -32,8 +49,19 @@ export const BookingForm: React.FC = () => {
           <p className="text-slate-400">Ready to experience the Malnad magic? Send us a request and we'll handle the rest.</p>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-lg p-8 md:p-10 rounded-3xl border border-slate-700 shadow-2xl">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-slate-800/50 backdrop-blur-lg p-8 md:p-10 rounded-3xl border border-slate-700 shadow-2xl relative overflow-hidden">
+          {isSuccess && (
+            <div className="absolute inset-0 bg-slate-900/95 z-20 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+              <div className="w-16 h-16 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="h-8 w-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Request Sent Successfully!</h3>
+              <p className="text-slate-400 max-w-sm">Thank you! Our concierge will contact you shortly to confirm your booking.</p>
+              <button onClick={() => setIsSuccess(false)} className="mt-8 text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-4">Send another request</button>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             <div className="col-span-1">
               <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Full Name</label>
               <div className="relative">
@@ -124,7 +152,7 @@ export const BookingForm: React.FC = () => {
             </div>
 
             <div className="col-span-1 md:col-span-2 mt-4">
-              <Button type="submit" className="w-full text-lg py-4">Request Booking</Button>
+              <Button type="submit" className="w-full text-lg py-4" isLoading={isLoading}>Request Booking</Button>
             </div>
           </form>
         </div>

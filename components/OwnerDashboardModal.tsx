@@ -1,21 +1,30 @@
 
-import React, { useState } from 'react';
-import { X, Upload, List, ChevronRight, BarChart3, CheckCircle, MapPin, Sparkles, Copy, Check, Home } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Upload, List, ChevronRight, BarChart3, CheckCircle, MapPin, Sparkles, Copy, Check, Home, Image as ImageIcon, Loader2, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './Button';
 import { generateListingDescription } from '../services/geminiService';
 import { Property, PropertyCategory } from '../types';
+import { storage } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface OwnerDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const COMMON_AMENITIES = [
+  'Wi-Fi', 'AC', 'Parking', 'Furnished', 'Attached Bathroom', 
+  'Geyser', 'Power Backup', 'Laundry', 'CCTV', 'Meals Included',
+  'Study Desk', 'Gym Access', 'Housekeeping', 'Filtered Water'
+];
+
 export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'upload' | 'listings' | 'stats' | 'optimizer'>('upload');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Upload Form State
   const [formData, setFormData] = useState({
@@ -25,8 +34,11 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
     location: '',
     description: '',
     imageUrl: '',
-    amenities: ''
+    amenities: [] as string[]
   });
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // AI Optimizer State
   const [aiPropertyName, setAiPropertyName] = useState('');
@@ -38,9 +50,51 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
 
   if (!isOpen) return null;
 
+  // Amenity Toggle Handler
+  const toggleAmenity = (amenity: string) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
+
+  // Image Upload Handler
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Create a local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to Firebase
+    setUploadingImage(true);
+    try {
+      const storageRef = ref(storage, `property_images/${user?.id}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setFormData(prev => ({ ...prev, imageUrl: downloadURL }));
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      alert("Failed to upload image. Please try again.");
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Upload Handlers
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.imageUrl) {
+      alert("Please upload a property image first.");
+      return;
+    }
     setLoading(true);
     
     // Create new Property Object
@@ -55,11 +109,11 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
         mainImage: formData.imageUrl,
         galleryImages: [formData.imageUrl], // Use same for gallery for demo
         description: formData.description,
-        amenities: formData.amenities.split(',').map(s => s.trim()),
+        amenities: formData.amenities,
         allowedGuest: 'Any', // Default
         specs: { guests: 2, bedrooms: 1, bathrooms: 1, size: 'Unknown' },
         coordinates: { lat: 12.7685, lng: 75.2023 }, // Default to Puttur center
-        status: 'pending' // KEY CHANGE: Mark as pending for Admin
+        status: 'pending' 
     };
 
     // Simulate API call and LocalStorage Save
@@ -81,8 +135,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
             location: '',
             description: '',
             imageUrl: '',
-            amenities: ''
+            amenities: []
         });
+        setImagePreview(null);
       }, 2000);
     }, 1500);
   };
@@ -213,7 +268,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3.5 px-5 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all appearance-none cursor-pointer"
                                     >
                                         <option value="Villa">Villa / Homestay</option>
-                                        <option value="Room">Private Room</option>
+                                        <option value="Apartment">Apartment / Flat</option>
                                         <option value="PG">PG (Paying Guest)</option>
                                         <option value="Hostel">Hostel / Dorm</option>
                                     </select>
@@ -222,7 +277,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Price <span className="text-slate-500 dark:text-slate-600 font-normal lowercase">(per night)</span></label>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Price <span className="text-slate-500 dark:text-slate-600 font-normal lowercase">(per month)</span></label>
                                 <div className="relative">
                                     <span className="absolute left-5 top-3.5 text-slate-500 font-serif">₹</span>
                                     <input 
@@ -243,9 +298,9 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                   <div className="bg-slate-50 dark:bg-slate-950/50 p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800/50">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800/50">
                         <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                            <MapPin className="h-4 w-4" />
+                            <ImageIcon className="h-4 w-4" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Location & Details</h3>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Location & Media</h3>
                     </div>
 
                     <div className="space-y-6">
@@ -262,15 +317,81 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cover Image URL</label>
-                            <input 
-                                type="text" 
-                                required
-                                value={formData.imageUrl}
-                                onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                                placeholder="https://example.com/image.jpg"
-                                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3.5 px-5 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
-                            />
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Property Image</label>
+                            <div 
+                              onClick={() => fileInputRef.current?.click()}
+                              className={`relative w-full h-48 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${
+                                imagePreview 
+                                  ? 'border-emerald-500/50' 
+                                  : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500'
+                              }`}
+                            >
+                              <input 
+                                type="file" 
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                className="hidden"
+                              />
+                              
+                              {imagePreview ? (
+                                <>
+                                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                     <div className="flex flex-col items-center gap-2 text-white">
+                                        <Upload className="h-6 w-6" />
+                                        <span className="text-sm font-bold">Change Image</span>
+                                     </div>
+                                  </div>
+                                  {uploadingImage && (
+                                    <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center">
+                                      <div className="flex flex-col items-center gap-2">
+                                        <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+                                        <span className="text-xs font-bold text-emerald-500">Uploading...</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-center text-slate-500">
+                                  {uploadingImage ? (
+                                    <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mb-2" />
+                                  ) : (
+                                    <Upload className="h-8 w-8 mb-2" />
+                                  )}
+                                  <p className="text-sm font-bold">Click or drag to upload property photo</p>
+                                  <p className="text-xs mt-1">PNG, JPG, WEBP (Max 5MB)</p>
+                                </div>
+                              )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Amenities</label>
+                            <p className="text-xs text-slate-400 mb-3">Select the features available at your property:</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              {COMMON_AMENITIES.map(amenity => (
+                                <button
+                                  key={amenity}
+                                  type="button"
+                                  onClick={() => toggleAmenity(amenity)}
+                                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
+                                    formData.amenities.includes(amenity)
+                                      ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-900/10'
+                                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                                  }`}
+                                >
+                                  <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${
+                                    formData.amenities.includes(amenity)
+                                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                                      : 'bg-transparent border-slate-300 dark:border-slate-700'
+                                  }`}>
+                                    {formData.amenities.includes(amenity) && <Check className="h-2 w-2" strokeWidth={4} />}
+                                  </div>
+                                  {amenity}
+                                </button>
+                              ))}
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -291,12 +412,21 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                      <Button 
                        type="button" 
                        variant="outline" 
-                       onClick={() => setFormData({title: '', type: 'Villa', price: '', location: '', description: '', imageUrl: '', amenities: ''})}
+                       onClick={() => {
+                         setFormData({title: '', type: 'Villa', price: '', location: '', description: '', imageUrl: '', amenities: []});
+                         setImagePreview(null);
+                       }}
                        className="w-full md:w-auto text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700"
                      >
                         Reset
                      </Button>
-                     <Button type="submit" size="lg" isLoading={loading} className="w-full md:w-auto shadow-xl shadow-emerald-900/20">
+                     <Button 
+                        type="submit" 
+                        size="lg" 
+                        isLoading={loading || uploadingImage} 
+                        disabled={!formData.imageUrl}
+                        className="w-full md:w-auto shadow-xl shadow-emerald-900/20"
+                      >
                        Submit Listing
                      </Button>
                   </div>
@@ -324,7 +454,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
                                 <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                                     prop.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
                                     prop.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
-                                    'bg-red-500/10 text-red-500'
+                                    'bg-red-500/10 text-red-600'
                                 }`}>
                                     {prop.status}
                                 </div>
@@ -371,7 +501,7 @@ export const OwnerDashboardModal: React.FC<OwnerDashboardModalProps> = ({ isOpen
           {activeTab === 'optimizer' && (
             <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 pb-12">
               <div className="mb-8">
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 dark:text-amber-400 text-xs font-medium mb-3">
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 dark:text-amber-400 text-xs font-medium mb-3">
                   <Sparkles className="h-3 w-3 mr-2" />
                   AI For Landlords
                 </div>

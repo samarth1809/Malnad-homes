@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
-import { MapPin, Star, User, ArrowRight, Heart } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapPin, Star, ArrowRight, Heart, ChevronRight } from 'lucide-react';
 import { Property } from '../types';
-import { properties } from '../data/properties';
-import { PropertyDetailsModal } from './PropertyDetailsModal';
+import { properties as staticProperties } from '../data/properties';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { PropertyCardSkeleton } from './Skeleton';
 
 interface PropertyCardProps {
   property: Property;
@@ -15,6 +15,7 @@ interface PropertyCardProps {
 
 interface FeaturedPlacesProps {
   onViewAllClick?: () => void;
+  onViewProperty: (property: Property) => void;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick }) => {
@@ -35,44 +36,65 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-slate-700 transition-all duration-300 group cursor-pointer animate-in fade-in zoom-in-95 relative"
+      className="bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-800 hover:border-emerald-500/40 transition-all duration-500 group cursor-pointer animate-in fade-in zoom-in-95 relative flex flex-col h-full hover:shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.1)] hover:-translate-y-2"
     >
-      <div className="relative h-64 overflow-hidden">
-        <img src={property.mainImage} alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-        
-        {/* Rating Badge - Moved to Top Left */}
-        <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 border border-slate-700">
-          <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+      <div className="relative w-full aspect-[4/3] overflow-hidden shrink-0">
+        <img 
+          src={property.mainImage} 
+          alt={property.title} 
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800';
+          }}
+        />
+        {/* Glassmorphic Badge */}
+        <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 shadow-xl">
+          <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
           <span className="text-xs font-bold text-white">{property.rating}</span>
         </div>
-
-        {/* Favorite Button - Top Right */}
+        
+        {/* Prominent Favorite Button */}
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-900/50 hover:bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 transition-all group/btn z-10"
+          className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-md border transition-all duration-300 z-10 group/fav ${
+            favorite 
+              ? 'bg-red-500 border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
+              : 'bg-black/40 border-white/20 hover:bg-black/60 hover:scale-110'
+          }`}
         >
-          <Heart className={`h-5 w-5 transition-colors ${favorite ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+          <Heart className={`h-5 w-5 transition-colors ${favorite ? 'fill-white text-white' : 'text-white'}`} />
         </button>
 
         <div className="absolute bottom-4 left-4 flex gap-2">
-           <span className="bg-emerald-600/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+           <span className="bg-emerald-600/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black text-white uppercase tracking-wider shadow-lg">
               {property.category}
           </span>
         </div>
       </div>
-      <div className="p-6">
-        <div className="flex items-center text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          <MapPin className="h-3 w-3 mr-1" />
-          {property.location}
+
+      <div className="p-6 md:p-8 flex flex-col flex-1">
+        <div className="flex items-center text-emerald-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-3">
+          <MapPin className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+          <span className="truncate">{property.location}</span>
         </div>
-        <h3 className="text-xl font-serif font-bold text-white mb-2">{property.title}</h3>
-        <div className="flex justify-between items-end mt-4">
-          <div>
-            <p className="text-slate-400 text-sm">Rent per month</p>
-            <p className="text-white font-bold text-lg">{property.price} <span className="text-xs font-normal text-slate-500">/ mo</span></p>
+        
+        <h3 className="text-xl md:text-2xl font-serif font-bold text-white mb-4 line-clamp-1 group-hover:text-emerald-400 transition-colors duration-300">
+          {property.title}
+        </h3>
+        
+        <div className="mt-auto flex justify-between items-end gap-4">
+          <div className="transition-transform duration-500 group-hover:translate-x-1">
+            <p className="text-slate-500 text-[10px] md:text-xs uppercase font-black tracking-widest mb-1.5">Rent per month</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-white font-black text-xl md:text-3xl transition-all duration-500 group-hover:text-emerald-400 group-hover:scale-105 origin-left">
+                {property.price}
+              </span>
+              <span className="text-xs font-medium text-slate-600">/ mo</span>
+            </div>
           </div>
-          <button className="p-2 rounded-full bg-slate-800 group-hover:bg-emerald-600 text-emerald-400 group-hover:text-white transition-colors">
-            <User className="h-5 w-5" />
+          
+          <button className="p-3.5 rounded-2xl bg-slate-800 group-hover:bg-emerald-600 text-emerald-400 group-hover:text-white transition-all duration-300 shadow-xl active:scale-90 group-hover:rotate-[-5deg]">
+            <ChevronRight className="h-6 w-6" />
           </button>
         </div>
       </div>
@@ -80,53 +102,58 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick }) => {
   );
 };
 
-export const FeaturedPlaces: React.FC<FeaturedPlacesProps> = ({ onViewAllClick }) => {
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+export const FeaturedPlaces: React.FC<FeaturedPlacesProps> = ({ onViewAllClick, onViewProperty }) => {
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Only show first 6 on the home page
-  const displayedPlaces = properties.slice(0, 6);
+  const allValidProperties = useMemo(() => {
+    const dynamicProps = JSON.parse(localStorage.getItem('malnad_dynamic_properties') || '[]') as Property[];
+    const approvedDynamic = dynamicProps.filter(p => p.status === 'approved');
+    return [...staticProperties, ...approvedDynamic].filter(p => p.mainImage && p.mainImage.trim() !== '');
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <section id="places" className="py-24 bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+    <section id="places" className="py-20 md:py-32 bg-slate-950 overflow-hidden relative">
+      {/* Background Decorative Gradient */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between md:items-end mb-12 md:mb-20">
           <div className="max-w-3xl">
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-4">Recommended Stays</h2>
-            <p className="text-slate-400 text-lg">Discover top-rated accommodations tailored for your budget and lifestyle. From shared student dorms to private employee suites.</p>
+            <h2 className="text-4xl md:text-6xl font-serif font-bold text-white mb-4 md:mb-6 leading-tight">
+              Curated <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Stays</span>
+            </h2>
+            <p className="text-slate-400 text-base md:text-xl leading-relaxed">
+              Handpicked accommodations designed to elevate your living experience in Malnad.
+            </p>
           </div>
           <button 
-            onClick={onViewAllClick}
-            className="hidden md:flex items-center text-emerald-400 hover:text-emerald-300 font-semibold transition-colors mt-6 md:mt-0"
+            onClick={onViewAllClick} 
+            className="flex items-center gap-3 text-emerald-400 hover:text-emerald-300 font-black transition-all mt-8 md:mt-0 text-sm md:text-base group uppercase tracking-widest"
           >
-            View All Properties <ArrowRight className="ml-2 h-4 w-4" />
+            Explore Listings <div className="p-2 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors"><ArrowRight className="h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" /></div>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {displayedPlaces.map((place) => (
-            <PropertyCard 
-              key={place.id} 
-              property={place} 
-              onClick={() => setSelectedProperty(place)}
-            />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+          {isLoading ? Array.from({ length: 3 }).map((_, i) => <PropertyCardSkeleton key={i} />) : 
+            allValidProperties.slice(0, 6).map((place) => <PropertyCard key={place.id} property={place} onClick={() => onViewProperty(place)} />)}
         </div>
         
-        <div className="mt-12 text-center md:hidden">
-           <button 
-             onClick={onViewAllClick}
-             className="text-emerald-400 font-semibold flex items-center justify-center mx-auto"
-           >
-             View All Properties <ArrowRight className="ml-2 h-4 w-4" />
-           </button>
+        {/* Mobile View All CTA */}
+        <div className="mt-12 md:hidden">
+          <button 
+            onClick={onViewAllClick}
+            className="w-full py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-2xl active:scale-95 transition-all text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/20"
+          >
+            Show more listings
+          </button>
         </div>
       </div>
-
-      <PropertyDetailsModal 
-        isOpen={!!selectedProperty} 
-        property={selectedProperty} 
-        onClose={() => setSelectedProperty(null)} 
-      />
     </section>
   );
 };
